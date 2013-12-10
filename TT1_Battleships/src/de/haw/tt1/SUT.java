@@ -8,7 +8,8 @@ public class SUT {
     public static void main(String[] args) {
         
         Network chord = new Network(8080);
-        
+        chord.create();
+        System.out.println("Chord ID:" + chord.getChordID());
     }
 
 }
