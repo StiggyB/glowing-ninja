@@ -31,6 +31,9 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -1116,6 +1119,42 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	@Override
 	public void broadcast (ID target, Boolean hit) {
 		this.logger.debug("App called broadcast");
+		List<Node> fingertable = this.getFingerTable();
+		List<Node> fingertable_noduplicates = new ArrayList<>();
+		
+	
+		ID srcID = this.getID();
+	
+		
+		for(Node n : fingertable){
+			if(!fingertable_noduplicates.contains(n)){
+				fingertable_noduplicates.add(n);
+			}
+		}
+		
+		Collections.sort(fingertable_noduplicates);
+		
+		int transactionID = (int)(Math.random()*((double)(Integer.MAX_VALUE)));
+		for(int i = 0 ; i < fingertable_noduplicates.size(); i++){
+			ID range;
+			if(i+1 < fingertable_noduplicates.size()){
+				range = fingertable_noduplicates.get(i+1).getNodeID();
+			}else{
+				range = this.getID();
+			}
+			
+			try {
+				fingertable_noduplicates.get(i).broadcast(new Broadcast(range, srcID, target, transactionID , hit));
+			} catch (CommunicationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		
+		
+	
 		
 	}
 	
