@@ -31,7 +31,6 @@ import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.DEBUG;
 import static de.uniba.wiai.lspi.util.logging.Logger.LogLevel.INFO;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -1122,10 +1121,8 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		List<Node> fingertable = this.getFingerTable();
 		List<Node> fingertable_noduplicates = new ArrayList<>();
 		
-	
 		ID srcID = this.getID();
 	
-		
 		for(Node n : fingertable){
 			if(!fingertable_noduplicates.contains(n)){
 				fingertable_noduplicates.add(n);
@@ -1151,11 +1148,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 			}
 			
 		}
-		
-		
-		
-	
-		
 	}
 	
 	public void setCallback (NotifyCallback callback) {
@@ -1177,6 +1169,7 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 		this.logger = Logger.getLogger(ChordImpl.class.getName() + "."
 				+ this.localCallback);
 	}
+	
 	@Override
 	public void clearCallback() {
 		this.localCallback = null;

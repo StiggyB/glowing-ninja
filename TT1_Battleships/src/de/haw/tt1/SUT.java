@@ -7,8 +7,23 @@ public class SUT {
      */
     public static void main(String[] args) {
         
-        Network chord = new Network(8080);
-        chord.create();
+        String cmd = args[0];
+        String host = args[1];
+        int port = Integer.parseInt(args[2]);
+        
+        Network chord = new Network(port);
+
+        if (cmd.equals("-c")) {
+            chord.create();
+        } else if (cmd.equals("-j")) {
+            chord.join(host, port);
+        } else if (cmd.equals("-l")) {
+            chord.leave();
+        } else if (cmd.equals("-s")) {
+            chord.shoot();
+        }
+        
+//        chord.create();
         System.out.println("Chord ID:" + chord.getChordID());
     }
 

@@ -72,7 +72,16 @@ public class Network {
         }
     }
 
-    public void leaveChord() {
+    public void shoot() {
+        try {
+            chord.retrieve(getRandomID());
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
+    public void leave() {
         try {
             chord.leave();
             System.out.println("Left chord network");
