@@ -3,7 +3,6 @@ package de.haw.tt1;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.Random;
 
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.data.URL;
@@ -20,42 +19,47 @@ import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
  */
 public class Network {
 
-    private String host;
-    private int    port;
+    private String localHost;
+    private int    localPort;
     private String protocol;
     private NCImpl nc = new NCImpl();
     private Chord  chord;
     private URL    chordURL;
     private ID     chordID;
 
-    public Network(int port) {
+    public Network(int localport) {
         PropertiesLoader.loadPropertyFile();
 
+//        this.chordID = getRandomID();
         try {
-            host = InetAddress.getLocalHost().getHostAddress();
+            localHost = //"localhost";
+            InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        this.port = port;
-
-        this.chordURL = getChordURL(host, this.port);
+        this.localPort = localport;
+        this.chordURL = getChordURL(this.localHost, this.localPort);
         this.chord = new ChordImpl();
-        this.chord.setURL(chordURL);
-        this.chord.setID(getRandomID()); 
+        this.chord.setURL(this.chordURL);
         this.chord.setCallback(nc);
-        this.chordID = chord.getID();
     }
 
-    private ID getRandomID() {
-        byte[] bytes = new byte[8];
-        new Random().nextBytes(bytes);
-        return new ID(bytes);
+    ID getRandomID() {
+        // divide by 8 to get bytes, getLength measures in bits
+        // and length of IDs has to be the same
+        byte[] r = new byte[chordID.getLength()/8];
+        for (int i=0; i<r.length; i++) {
+            r[i] = (byte)(Math.random() * 0xFF);
+        }
+        return (new ID(r));
     }
 
     public void create() {
         try {
             chord.create(chordURL);
+            chordID = chord.getID(); 
+            System.out.println("Created chord on " + chordURL);
         } catch (ServiceException e) {
             throw new RuntimeException("Could not create DHT!", e);
         }
@@ -64,7 +68,8 @@ public class Network {
     public void join(String host, int port) {
         URL bootstrapURL = getChordURL(host, port);
         try {
-            chord.join(chordURL, bootstrapURL);
+            chord.join(bootstrapURL);
+            chordID = chord.getID(); 
             System.out.println("Joined chord network: "
                     + bootstrapURL.toString());
         } catch (ServiceException e) {
@@ -72,15 +77,6 @@ public class Network {
         }
     }
 
-    public void shoot() {
-        try {
-            chord.retrieve(getRandomID());
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    
     public void leave() {
         try {
             chord.leave();
@@ -90,7 +86,28 @@ public class Network {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Shoot somewhere... 
+     * @param id
+     */
+    public void shoot(ID id) {
+//        ID id = getRandomID();
+        try {
+            chord.retrieve(id);
+            System.out.println("attack: ID=" + id);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * Build chord url with host and port
+     *
+     * @param host
+     * @param port
+     * @return url
+     */
     private URL getChordURL(String host, int port) {
         protocol = URL.KNOWN_PROTOCOLS.get(URL.SOCKET_PROTOCOL);
         URL url = null;
@@ -108,6 +125,10 @@ public class Network {
 
     public ID getChordID() {
         return chordID;
+    }
+    
+    public ID getPredecessorID() {
+        return chord.getPredecessorID();
     }
 
 }

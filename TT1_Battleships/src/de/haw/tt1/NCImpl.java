@@ -8,13 +8,13 @@ public class NCImpl implements NotifyCallback {
     @Override
     public void retrieved(ID target) {
         // TODO Auto-generated method stub
-        
+        System.out.println("retrieved - " + target.toString() + " has been attacked");
     }
 
     @Override
     public void broadcast(ID source, ID target, Boolean hit) {
         // TODO Auto-generated method stub
-        
+        System.out.println("broadcast - from: " + source.toString() + "\nto: " + target.toString() + "\n hit?: " + hit);
     }
 
 }
