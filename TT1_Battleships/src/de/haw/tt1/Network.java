@@ -19,47 +19,72 @@ import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
  */
 public class Network {
 
-    private String localHost;
-    private int    localPort;
-    private String protocol;
-    private NCImpl nc = new NCImpl();
-    private Chord  chord;
-    private URL    chordURL;
-    private ID     chordID;
+    private String         localHost;
+    private int            localPort = 0;
+    private String         protocol;
+    private NCImpl         nc        = new NCImpl();
+    private Chord          chord;
+    private URL            nodeURL;
+    private ID             chordID;
 
-    public Network(int localport) {
+    private static Network instance  = new Network();
+
+    private Network(int localPort) {
         PropertiesLoader.loadPropertyFile();
 
-//        this.chordID = getRandomID();
+        // this.chordID = getRandomID();
         try {
-            localHost = //"localhost";
+            localHost = // "localhost";
             InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        this.localPort = localport;
-        this.chordURL = getChordURL(this.localHost, this.localPort);
+        this.localPort = localPort;
+        this.nodeURL = getChordURL(this.localHost, this.localPort);
         this.chord = new ChordImpl();
-        this.chord.setURL(this.chordURL);
+        this.chord.setURL(this.nodeURL);
         this.chord.setCallback(nc);
+    }
+
+    private Network() {
+        PropertiesLoader.loadPropertyFile();
+
+        try {
+            localHost = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e1) {
+            e1.printStackTrace();
+        }
+
+        this.chord = new ChordImpl();
+        this.chord.setCallback(nc);
+    }
+
+    public static Network getInstance() {
+        return instance;
     }
 
     ID getRandomID() {
         // divide by 8 to get bytes, getLength measures in bits
         // and length of IDs has to be the same
-        byte[] r = new byte[chordID.getLength()/8];
-        for (int i=0; i<r.length; i++) {
-            r[i] = (byte)(Math.random() * 0xFF);
+        byte[] r = new byte[chordID.getLength() / 8];
+        for (int i = 0; i < r.length; i++) {
+            r[i] = (byte) (Math.random() * 0xFF);
         }
         return (new ID(r));
     }
 
+    public void setURLPort(int localPort) {
+        this.nodeURL = getChordURL(this.localHost,
+                this.localPort = localPort);
+        this.chord.setURL(nodeURL);
+    }
+
     public void create() {
         try {
-            chord.create(chordURL);
-            chordID = chord.getID(); 
-            System.out.println("Created chord on " + chordURL);
+            chord.create(nodeURL);
+            chordID = chord.getID();
+            System.out.println("Created chord on " + nodeURL);
         } catch (ServiceException e) {
             throw new RuntimeException("Could not create DHT!", e);
         }
@@ -69,7 +94,7 @@ public class Network {
         URL bootstrapURL = getChordURL(host, port);
         try {
             chord.join(bootstrapURL);
-            chordID = chord.getID(); 
+            chordID = chord.getID();
             System.out.println("Joined chord network: "
                     + bootstrapURL.toString());
         } catch (ServiceException e) {
@@ -86,13 +111,14 @@ public class Network {
             e.printStackTrace();
         }
     }
-    
+
     /**
-     * Shoot somewhere... 
+     * Shoot somewhere...
+     * 
      * @param id
      */
     public void shoot(ID id) {
-//        ID id = getRandomID();
+        // ID id = getRandomID();
         try {
             chord.retrieve(id);
             System.out.println("attack: ID=" + id);
@@ -103,7 +129,7 @@ public class Network {
 
     /**
      * Build chord url with host and port
-     *
+     * 
      * @param host
      * @param port
      * @return url
@@ -126,7 +152,7 @@ public class Network {
     public ID getChordID() {
         return chordID;
     }
-    
+
     public ID getPredecessorID() {
         return chord.getPredecessorID();
     }

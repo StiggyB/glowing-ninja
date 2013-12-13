@@ -6,15 +6,19 @@ import de.uniba.wiai.lspi.chord.data.ID;
 
 public class SUT {
 
+    private static Network chord;
+
     /**
      * @param args
      */
     public static void main(String[] args) {
 
+        System.out.println("Battleship game warm up...");
+        
         String cmd = args[0];
         int port = Integer.parseInt(args[1]);
-
-        Network chord = new Network(port);
+        Network.getInstance().setURLPort(port);
+        chord = Network.getInstance();
 
         if (cmd.equals("-c")) {
             chord.create();
@@ -31,15 +35,24 @@ public class SUT {
         System.out.println("Chord ID:" + chord.getChordID());
 
         Scanner in = new Scanner(System.in);
+        
+        System.out.println("Enter number of intervals: ");
+        int i = in.nextInt();
+        System.out.println("Enter number of ships: ");
+        int s = in.nextInt();
+        
+        Battleship.getInstance().setIntervalsAndShips(i, s);
+        
+        System.out.println("They ain't gonna sink this battleship, no way!");
+        System.out.println("Game is on!");
+        
         ID target;
         while (!cmd.equals("q")) {
 
             cmd = in.nextLine();
-            int i = 0;
             if (cmd.equals("s")) {
                 do {
                     target = chord.getRandomID();
-                    System.out.println(i++);
                     System.out.println("Predecessor: " + chord.getPredecessorID().toString());
                 } while (target.isInInterval(chord.getPredecessorID(), chord.getChordID()));
                 chord.shoot(target);
