@@ -446,7 +446,6 @@ public final class NodeImpl extends Node {
         if (this.logger.isEnabledFor(DEBUG)) {
             this.logger.debug(" Send broadcast message");
         }
-        System.out.println(info.toString() + " sended broadcast");
 
         List<Node> fingerTable = this.impl.getFingerTable();
         List<Node> fingerTable_inRange = new ArrayList<>();

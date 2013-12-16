@@ -118,10 +118,8 @@ public class Network {
      * @param id
      */
     public void shoot(ID id) {
-        // ID id = getRandomID();
         try {
             chord.retrieve(id);
-            System.out.println("attack: ID=" + id);
         } catch (ServiceException e) {
             e.printStackTrace();
         }

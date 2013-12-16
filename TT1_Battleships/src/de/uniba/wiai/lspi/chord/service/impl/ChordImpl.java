@@ -1118,7 +1118,6 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 	@Override
 	public void broadcast (ID target, Boolean hit) {
 		this.logger.debug("App called broadcast");
-		System.out.println(target.toString() + " called broadcast [hit=" + hit);
 		List<Node> fingertable = this.getFingerTable();
 		List<Node> fingertable_noduplicates = new ArrayList<>();
 		

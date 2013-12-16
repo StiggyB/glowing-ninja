@@ -13,6 +13,8 @@ public class Battleship {
                                                   .getPredecessorID();
     private ID                myID        = Network.getInstance()
                                                   .getChordID();
+    private int               shipsLeft;
+    private volatile boolean  alive       = true;
 
     private static Battleship game        = new Battleship();
 
@@ -34,6 +36,7 @@ public class Battleship {
             throw new IllegalArgumentException("s<i && s>0");
         this.I = i;
         this.S = s;
+        shipsLeft = S;
         arrangeShips();
     }
 
@@ -54,25 +57,33 @@ public class Battleship {
     }
 
     /**
-     * Should calculate the intervals in our DHT space
+     * Calculates the intervals in the DHT. TODO Wrap around does not work.
      */
     private int checkInterval(ID id) {
         BigInteger upperIntervalBorder = null;
         BigInteger lowerIntervalBorder = predecessor.toBigInteger();
         BigInteger myIDInt = myID.toBigInteger();
 
+        System.out.println("My ID: " + myIDInt + " - " + lowerIntervalBorder + " :predecessor ID");
         BigInteger range = myIDInt.subtract(lowerIntervalBorder);
+        System.out.println("Range: " + range);
         BigInteger oneStep = range.divide(BigInteger.valueOf(I));
+        System.out.println("Step: " + oneStep);
 
-        
+        System.out.println("for - loop:");
         for (int i = 0; i < I - 1; i++) {
             upperIntervalBorder = lowerIntervalBorder.add(oneStep);
+            System.out.println("upperIntervalBorder: " + upperIntervalBorder);
             if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
                     .valueOf(upperIntervalBorder))) {
+                System.out.println("Interval: " + i);
                 return i;
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
+
+        if (id.isInInterval(ID.valueOf(lowerIntervalBorder), myID))
+            return I - 1;
 
         return -1;
     }
@@ -84,12 +95,37 @@ public class Battleship {
      * @return
      */
     public boolean gotHit(ID id) {
-        int interval = checkInterval(id); 
+        int interval = checkInterval(id);
         if (interval != -1 && map[interval]) {
             map[interval] = false; // ship sunk
+            shipsLeft--;
+            alive = shipsLeft == 0 ? false : true;
             return true;
         }
         return false;
+    }
+
+    public boolean hasStartID() {
+        byte[] tmp = new byte[myID.getLength() / 8];
+        for (int i = 0; i < myID.getLength() / 8; i++) {
+            tmp[i] = (byte) 0xFF;
+        }
+        return new ID(tmp).isInInterval(predecessor, myID);
+    }
+
+    public void logAttack(ID source, ID target, Boolean hit) {
+
+    }
+
+    /**
+     * @return the shipsLeft
+     */
+    protected int getShipsLeft() {
+        return shipsLeft;
+    }
+
+    public boolean isAlive() {
+        return alive;
     }
 
 }
