@@ -28,6 +28,8 @@ public class NCImpl implements NotifyCallback {
                 e.printStackTrace();
             }
             System.out.println("All our ships sunk!");
+        } else {
+            Battleship.getInstance().setTurn(true);
         }
     }
 

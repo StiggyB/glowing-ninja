@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 
 import de.uniba.wiai.lspi.chord.data.ID;
 import de.uniba.wiai.lspi.chord.data.URL;
-import de.uniba.wiai.lspi.chord.service.Chord;
 import de.uniba.wiai.lspi.chord.service.PropertiesLoader;
 import de.uniba.wiai.lspi.chord.service.ServiceException;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
@@ -23,7 +22,7 @@ public class Network {
     private int            localPort = 0;
     private String         protocol;
     private NCImpl         nc        = new NCImpl();
-    private Chord          chord;
+    private ChordImpl      chord;
     private URL            nodeURL;
     private ID             chordID;
 
@@ -103,13 +102,8 @@ public class Network {
     }
 
     public void leave() {
-        try {
-            chord.leave();
-            System.out.println("Left chord network");
-        } catch (ServiceException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        chord.leave();
+        System.out.println("Left chord network");
     }
 
     /**
@@ -118,11 +112,7 @@ public class Network {
      * @param id
      */
     public void shoot(ID id) {
-        try {
-            chord.retrieve(id);
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
+        chord.retrieve(id);
     }
 
     /**
@@ -143,7 +133,7 @@ public class Network {
         return url;
     }
 
-    public Chord getChord() {
+    public ChordImpl getChord() {
         return chord;
     }
 

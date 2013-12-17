@@ -1,6 +1,9 @@
 package de.haw.tt1;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import de.uniba.wiai.lspi.chord.data.ID;
 
@@ -15,6 +18,8 @@ public class Battleship {
                                                   .getChordID();
     private int               shipsLeft;
     private volatile boolean  alive       = true;
+    private boolean           turn        = false;
+    private List<ID>          enemys      = new ArrayList<>();
 
     private static Battleship game        = new Battleship();
 
@@ -31,11 +36,17 @@ public class Battleship {
         return game;
     }
 
-    public void setIntervalsAndShips(int i, int s) {
-        if (!(s < i && s > 0))
+    /**
+     * Place Ships in intervals
+     * 
+     * @param intervals
+     * @param ships
+     */
+    public void setIntervalsAndShips(int intervals, int ships) {
+        if (!(ships < intervals && ships > 0))
             throw new IllegalArgumentException("s<i && s>0");
-        this.I = i;
-        this.S = s;
+        this.I = intervals;
+        this.S = ships;
         shipsLeft = S;
         arrangeShips();
     }
@@ -64,16 +75,12 @@ public class Battleship {
         BigInteger lowerIntervalBorder = predecessor.toBigInteger();
         BigInteger myIDInt = myID.toBigInteger();
 
-        System.out.println("My ID: " + myIDInt + " - " + lowerIntervalBorder + " :predecessor ID");
         BigInteger range = myIDInt.subtract(lowerIntervalBorder);
-        System.out.println("Range: " + range);
         BigInteger oneStep = range.divide(BigInteger.valueOf(I));
-        System.out.println("Step: " + oneStep);
-
-        System.out.println("for - loop:");
         for (int i = 0; i < I - 1; i++) {
             upperIntervalBorder = lowerIntervalBorder.add(oneStep);
-            System.out.println("upperIntervalBorder: " + upperIntervalBorder);
+            System.out.println("upperIntervalBorder: "
+                    + upperIntervalBorder);
             if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
                     .valueOf(upperIntervalBorder))) {
                 System.out.println("Interval: " + i);
@@ -81,10 +88,10 @@ public class Battleship {
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
-
-        if (id.isInInterval(ID.valueOf(lowerIntervalBorder), myID))
+        if (id.isInInterval(ID.valueOf(lowerIntervalBorder), myID)) {
+            System.out.println("Interval: " + (I - 1));
             return I - 1;
-
+        }
         return -1;
     }
 
@@ -99,22 +106,56 @@ public class Battleship {
         if (interval != -1 && map[interval]) {
             map[interval] = false; // ship sunk
             shipsLeft--;
-            alive = shipsLeft == 0 ? false : true;
+            alive = shipsLeft <= 0 ? false : true;
             return true;
         }
         return false;
     }
 
+    /**
+     * Check if we starting ID
+     * @return 
+     */
     public boolean hasStartID() {
         byte[] tmp = new byte[myID.getLength() / 8];
         for (int i = 0; i < myID.getLength() / 8; i++) {
             tmp[i] = (byte) 0xFF;
         }
-        return new ID(tmp).isInInterval(predecessor, myID);
+        return this.turn = new ID(tmp)
+                .isInInterval(predecessor, myID);
     }
 
+    /**
+     * TODO
+     * 
+     * @param source
+     * @param target
+     * @param hit
+     */
     public void logAttack(ID source, ID target, Boolean hit) {
+        enemys.add(source);
+    }
 
+    /**
+     * TODO
+     * 
+     * @param enemy
+     * @param interval
+     */
+    public void attack(ID enemy, int interval) {
+        ID target = getIdInInterval(enemy, interval);
+        Network.getInstance().shoot(target);
+    }
+
+    /**
+     * TODO
+     * 
+     * @param enemy
+     * @param interval
+     * @return
+     */
+    private ID getIdInInterval(ID enemy, int interval) {
+        return null;
     }
 
     /**
@@ -126,6 +167,29 @@ public class Battleship {
 
     public boolean isAlive() {
         return alive;
+    }
+
+    public void setTurn(boolean turn) {
+        this.turn = turn;
+    }
+
+    public boolean getTurn() {
+        return turn;
+    }
+
+    /**
+     * TODO fancier
+     */
+    public void showShips() {
+        System.out.println(Arrays.toString(map));
+    }
+
+    /**
+     * TODO USE FINGERTABLE FOR SHOOTING
+     */
+    public void printFingerTable() {
+        System.out.println(Network.getInstance().getChord()
+                .printFingerTable());
     }
 
 }
