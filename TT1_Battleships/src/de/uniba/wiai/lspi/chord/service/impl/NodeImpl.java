@@ -448,11 +448,15 @@ public final class NodeImpl extends Node {
         }
 
         List<Node> fingerTable = this.impl.getFingerTable();
-        List<Node> fingerTable_inRange = new ArrayList<>();
+        List<Node> fingerTable_inRange = new ArrayList<Node>();
 
+        if (impl.getTransactionID() >= info.getTransaction()) {
+            System.err.println("my tid >= bcast tid");
+        }
+        
         for (Node n : fingerTable) {
-            if (!this.nodeID.equals(info.getRange())
-                    && getNodeID().isInInterval(getNodeID(),
+            if (!this.getNodeID().equals(info.getRange())
+                    && n.getNodeID().isInInterval(this.getNodeID(),
                             info.getRange())
                     && !fingerTable_inRange.contains(n)) {
                 fingerTable_inRange.add(n);
@@ -461,12 +465,18 @@ public final class NodeImpl extends Node {
 
         Collections.sort(fingerTable_inRange);
         ID range;
-        
-        for (int i=0; i<fingerTable_inRange.size(); i++){
-            range = i+1<fingerTable_inRange.size() ? fingerTable_inRange.get(i+1).getNodeID() : info.getRange();
-            fingerTable_inRange.get(i).broadcast(new Broadcast(range, getNodeID(), info
-                    .getTarget(), info.getTransaction(), info.getHit()));
+
+        for (int i = 0; i < fingerTable_inRange.size(); i++) {
+            range = i + 1 < fingerTable_inRange.size() ? fingerTable_inRange
+                    .get(i + 1).getNodeID()
+                    : info.getRange();
+            fingerTable_inRange.get(i).broadcast(
+                    new Broadcast(range, info.getSource(), info
+                            .getTarget(), info.getTransaction(), info
+                            .getHit()));
         }
+        
+        impl.setTransactionID(info.getTransaction());
 
         // finally inform application
         if (this.notifyCallback != null) {

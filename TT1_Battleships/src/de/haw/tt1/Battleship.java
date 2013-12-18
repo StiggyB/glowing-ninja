@@ -5,12 +5,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
 
 public class Battleship {
 
-    private int               I;
-    private int               S;
+    private int               nIntervals;
+    private int               nShips;
     private boolean[]         map         = null;
     private ID                predecessor = Network.getInstance()
                                                   .getPredecessorID();
@@ -19,10 +20,11 @@ public class Battleship {
     private int               shipsLeft;
     private volatile boolean  alive       = true;
     private boolean           turn        = false;
-    private List<ID>          enemys      = new ArrayList<>();
+    private List<Enemy>       enemys      = new ArrayList<>();
 
     private static Battleship game        = new Battleship();
 
+    // --CONSTRUCTORS--//
     /**
      * Battleship, the main game and strategy class.
      * 
@@ -36,6 +38,7 @@ public class Battleship {
         return game;
     }
 
+    // --METHODS--//
     /**
      * Place Ships in intervals
      * 
@@ -45,10 +48,11 @@ public class Battleship {
     public void setIntervalsAndShips(int intervals, int ships) {
         if (!(ships < intervals && ships > 0))
             throw new IllegalArgumentException("s<i && s>0");
-        this.I = intervals;
-        this.S = ships;
-        shipsLeft = S;
+        this.nIntervals = intervals;
+        this.nShips = ships;
+        shipsLeft = nShips;
         arrangeShips();
+        fileEnemys();
     }
 
     /**
@@ -56,10 +60,10 @@ public class Battleship {
      * intervals
      */
     private void arrangeShips() {
-        map = new boolean[I];
-        int nos = S;
+        map = new boolean[nIntervals];
+        int nos = nShips;
         while (nos > 0) {
-            int idx = (int) (Math.random() * I);
+            int idx = (int) (Math.random() * nIntervals);
             if (!map[idx]) {
                 map[idx] = true;
                 nos--;
@@ -74,10 +78,20 @@ public class Battleship {
         BigInteger upperIntervalBorder = null;
         BigInteger lowerIntervalBorder = predecessor.toBigInteger();
         BigInteger myIDInt = myID.toBigInteger();
+        BigInteger range;
+        if (myIDInt.compareTo(lowerIntervalBorder) < 0) {
+            range = lowerIntervalBorder.add(BigInteger.valueOf(-1))
+                    .subtract(myIDInt);
+            System.out
+                    .println("[battleship] MyID was samller: "
+                            + myIDInt + " - Calculated range value: "
+                            + range);
+        }
+        range = myIDInt.subtract(lowerIntervalBorder);
+        BigInteger oneStep = range.divide(BigInteger
+                .valueOf(nIntervals));
 
-        BigInteger range = myIDInt.subtract(lowerIntervalBorder);
-        BigInteger oneStep = range.divide(BigInteger.valueOf(I));
-        for (int i = 0; i < I - 1; i++) {
+        for (int i = 0; i < nIntervals - 1; i++) {
             upperIntervalBorder = lowerIntervalBorder.add(oneStep);
             System.out.println("upperIntervalBorder: "
                     + upperIntervalBorder);
@@ -89,8 +103,8 @@ public class Battleship {
             lowerIntervalBorder = upperIntervalBorder;
         }
         if (id.isInInterval(ID.valueOf(lowerIntervalBorder), myID)) {
-            System.out.println("Interval: " + (I - 1));
-            return I - 1;
+            System.out.println("Interval: " + (nIntervals - 1));
+            return nIntervals - 1;
         }
         return -1;
     }
@@ -102,19 +116,21 @@ public class Battleship {
      * @return
      */
     public boolean gotHit(ID id) {
+        boolean hit = false;
         int interval = checkInterval(id);
         if (interval != -1 && map[interval]) {
             map[interval] = false; // ship sunk
             shipsLeft--;
-            alive = shipsLeft <= 0 ? false : true;
-            return true;
+            alive = shipsLeft <= 0 ? false : true; // are we down?
+            hit = true;
         }
-        return false;
+        return hit;
     }
 
     /**
      * Check if we starting ID
-     * @return 
+     * 
+     * @return
      */
     public boolean hasStartID() {
         byte[] tmp = new byte[myID.getLength() / 8];
@@ -125,6 +141,20 @@ public class Battleship {
                 .isInInterval(predecessor, myID);
     }
 
+    private void fileEnemys() {
+        List<Node> fingerTable = Network.getInstance().getChord()
+                .getFingerTable();
+        
+        enemys.add(new Enemy(fingerTable.get(0).getNodeID(), myID,
+                nShips, nIntervals));
+
+        for (int i = 1; i < fingerTable.size(); i++) {
+            enemys.add(new Enemy(fingerTable.get(i).getNodeID(),
+                    fingerTable.get(i - 1).getNodeID(), nShips,
+                    nIntervals));
+        }
+    }
+
     /**
      * TODO
      * 
@@ -133,7 +163,28 @@ public class Battleship {
      * @param hit
      */
     public void logAttack(ID source, ID target, Boolean hit) {
-        enemys.add(source);
+        Enemy attackedEnemy = null;
+        for (Enemy e : enemys) {
+            if (e.getId().equals(source)) {
+                attackedEnemy = e;
+                break;
+            }
+        }
+        
+        if (attackedEnemy == null) {
+            for (Enemy e : enemys) {
+                if (e.inRange(source)) {
+                    attackedEnemy = e.setNewPredecessor(source);
+                    enemys.add(attackedEnemy);
+                    break;
+                }
+            }
+        }
+        
+        attackedEnemy.gotAttackedAt(target, hit);
+        if (hit) {
+            System.out.println(attackedEnemy + " got hit");
+        }
     }
 
     /**
@@ -147,6 +198,7 @@ public class Battleship {
         Network.getInstance().shoot(target);
     }
 
+    // --GETTER AND SETTER--//
     /**
      * TODO
      * 
@@ -177,6 +229,7 @@ public class Battleship {
         return turn;
     }
 
+    // --MISC--//
     /**
      * TODO fancier
      */
@@ -190,6 +243,10 @@ public class Battleship {
     public void printFingerTable() {
         System.out.println(Network.getInstance().getChord()
                 .printFingerTable());
+    }
+
+    public void printEnemys() {
+        System.out.println(enemys.toString());
     }
 
 }

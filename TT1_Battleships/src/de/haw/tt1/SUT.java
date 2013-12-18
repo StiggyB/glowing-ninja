@@ -19,15 +19,15 @@ public class SUT {
         int port = Integer.parseInt(args[1]);
         Network.getInstance().setURLPort(port);
         chord = Network.getInstance();
+        boolean hoster = false;
 
         if (cmd.equals("-c")) {
             chord.create();
+            hoster = true;
         } else if (cmd.equals("-j")) {
             String host = args[2];
             int bport = Integer.parseInt(args[3]);
             chord.join(host, bport);
-        } else if (cmd.equals("-h")) {
-            // help
         }
 
         System.out.println("Chord ID: " + chord.getChordID());
@@ -40,13 +40,26 @@ public class SUT {
         // System.out.println("Enter number of ships: ");
         int ships = 5;// in.nextInt();
 
-        System.out.println("Bleiebige Taste zum Starten drücken.");
-        in.next();
-
+        if (hoster) {
+            System.out.println("Waiting for players...");
+            boolean playersReady = false;
+            System.out
+                    .println("Press Enter if all Players are ready.");
+            while (chord.getChord().getFingerTable().isEmpty()
+                    && !playersReady) {
+                if (in.nextLine().equals(""))
+                    playersReady = true;
+            }
+        } else {
+            System.out.println("Waiting...");
+            in.nextLine();
+        }
+        
         System.out
                 .println("Predecessor: " + chord.getPredecessorID());
 
-        Battleship.getInstance().setIntervalsAndShips(intervals, ships);
+        Battleship.getInstance().setIntervalsAndShips(intervals,
+                ships);
 
         System.out
                 .println("They ain't gonna sink this battleship, no way!");
@@ -56,7 +69,7 @@ public class SUT {
             System.out.println("WE START!");
         }
 
-        chord.getChord().broadcast(chord.getChordID(), true);
+        // chord.getChord().broadcast(chord.getChordID(), true);
 
         ID target;
         while (!cmd.equals("q")) {
@@ -70,19 +83,21 @@ public class SUT {
             } else if (cmd.equals("map")) {
                 Battleship.getInstance().showShips();
                 Battleship.getInstance().printFingerTable();
+            } else if (cmd.equals("e")) {
+                Battleship.getInstance().printEnemys();
             }
         }
 
         // this will be the main game loop
-//        while (Battleship.getInstance().isAlive()) {
-//            if (Battleship.getInstance().getTurn()) {
-//                do {
-//                    target = chord.getRandomID();
-//                } while (target.isInInterval(
-//                        chord.getPredecessorID(), chord.getChordID()));
-//                chord.shoot(target);
-//            }
-//        }
+        // while (Battleship.getInstance().isAlive()) {
+        // if (Battleship.getInstance().getTurn()) {
+        // do {
+        // target = chord.getRandomID();
+        // } while (target.isInInterval(
+        // chord.getPredecessorID(), chord.getChordID()));
+        // chord.shoot(target);
+        // }
+        // }
 
         // stop input
         in.close();
