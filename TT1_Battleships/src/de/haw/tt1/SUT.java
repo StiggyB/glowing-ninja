@@ -54,7 +54,7 @@ public class SUT {
             System.out.println("Waiting...");
             in.nextLine();
         }
-        
+
         System.out
                 .println("Predecessor: " + chord.getPredecessorID());
 
@@ -67,6 +67,7 @@ public class SUT {
 
         if (Battleship.getInstance().hasStartID()) {
             System.out.println("WE START!");
+            Battleship.getInstance().hasTurn(true);
         }
 
         // chord.getChord().broadcast(chord.getChordID(), true);
@@ -74,7 +75,7 @@ public class SUT {
         ID target;
         while (!cmd.equals("q")) {
             cmd = in.nextLine();
-            if (cmd.equals("s")) {
+            if (cmd.equals("s") && Battleship.getInstance().isAlive()) {
                 do {
                     target = chord.getRandomID();
                 } while (target.isInInterval(
@@ -89,15 +90,21 @@ public class SUT {
         }
 
         // this will be the main game loop
-        // while (Battleship.getInstance().isAlive()) {
-        // if (Battleship.getInstance().getTurn()) {
-        // do {
-        // target = chord.getRandomID();
-        // } while (target.isInInterval(
-        // chord.getPredecessorID(), chord.getChordID()));
-        // chord.shoot(target);
-        // }
-        // }
+//        while (Battleship.getInstance().isAlive()) {
+//            if (Battleship.getInstance().getTurn()) {
+//                do {
+//                    target = chord.getRandomID();
+//                } while (target.isInInterval(
+//                        chord.getPredecessorID(), chord.getChordID()));
+//                chord.shoot(target);
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
 
         // stop input
         in.close();

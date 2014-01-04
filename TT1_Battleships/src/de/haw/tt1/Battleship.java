@@ -12,17 +12,18 @@ public class Battleship {
 
     private int               nIntervals;
     private int               nShips;
-    private boolean[]         map         = null;
-    private ID                predecessor = Network.getInstance()
-                                                  .getPredecessorID();
-    private ID                myID        = Network.getInstance()
-                                                  .getChordID();
+    private boolean[]         map          = null;
+    private ID                predecessor  = Network
+                                                   .getInstance()
+                                                   .getPredecessorID();
+    private ID                myID         = Network.getInstance()
+                                                   .getChordID();
     private int               shipsLeft;
-    private volatile boolean  alive       = true;
-    private boolean           turn        = false;
-    private List<Enemy>       enemys      = new ArrayList<>();
-
-    private static Battleship game        = new Battleship();
+    private volatile boolean  alive        = true;
+    private boolean           turn         = false;
+    private List<Enemy>       enemys       = new ArrayList<>();
+    private BigInteger        intervalSize = null;
+    private static Battleship game         = new Battleship();
 
     // --CONSTRUCTORS--//
     /**
@@ -72,40 +73,36 @@ public class Battleship {
     }
 
     /**
-     * Calculates the intervals in the DHT. TODO Wrap around does not work.
+     * Calculates the intervals in the DHT. TODO Wrap around might work. Look at
+     * .addPowerOfTwo
      */
     private int checkInterval(ID id) {
         BigInteger upperIntervalBorder = null;
         BigInteger lowerIntervalBorder = predecessor.toBigInteger();
-        BigInteger myIDInt = myID.toBigInteger();
-        BigInteger range;
-        if (myIDInt.compareTo(lowerIntervalBorder) < 0) {
-            range = lowerIntervalBorder.add(BigInteger.valueOf(-1))
-                    .subtract(myIDInt);
-            System.out
-                    .println("[battleship] MyID was samller: "
-                            + myIDInt + " - Calculated range value: "
-                            + range);
-        }
-        range = myIDInt.subtract(lowerIntervalBorder);
-        BigInteger oneStep = range.divide(BigInteger
-                .valueOf(nIntervals));
+
+        BigInteger range = myID.addPowerOfTwo(
+                myID.getLength() - 1).toBigInteger().add(
+                new BigInteger("-1")).subtract(lowerIntervalBorder);
+
+        intervalSize = range.divide(BigInteger.valueOf(nIntervals));
 
         for (int i = 0; i < nIntervals - 1; i++) {
-            upperIntervalBorder = lowerIntervalBorder.add(oneStep);
-            System.out.println("upperIntervalBorder: "
-                    + upperIntervalBorder);
-            if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
-                    .valueOf(upperIntervalBorder))) {
-                System.out.println("Interval: " + i);
+            upperIntervalBorder = lowerIntervalBorder
+                    .add(intervalSize);
+
+            if (ID.valueOf(
+                    id.addPowerOfTwo(myID.getLength() - 1)
+                            .toBigInteger().add(new BigInteger("-1")))
+                    .isInInterval(ID.valueOf(lowerIntervalBorder),
+                            ID.valueOf(upperIntervalBorder))) {
+                System.out
+                        .println("[battleship/checkInterval] Interval: "
+                                + i);
                 return i;
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
-        if (id.isInInterval(ID.valueOf(lowerIntervalBorder), myID)) {
-            System.out.println("Interval: " + (nIntervals - 1));
-            return nIntervals - 1;
-        }
+
         return -1;
     }
 
@@ -144,14 +141,13 @@ public class Battleship {
     private void fileEnemys() {
         List<Node> fingerTable = Network.getInstance().getChord()
                 .getFingerTable();
-        
+
         enemys.add(new Enemy(fingerTable.get(0).getNodeID(), myID,
-                nShips, nIntervals));
+                nIntervals));
 
         for (int i = 1; i < fingerTable.size(); i++) {
             enemys.add(new Enemy(fingerTable.get(i).getNodeID(),
-                    fingerTable.get(i - 1).getNodeID(), nShips,
-                    nIntervals));
+                    fingerTable.get(i - 1).getNodeID(), nIntervals));
         }
     }
 
@@ -170,7 +166,7 @@ public class Battleship {
                 break;
             }
         }
-        
+
         if (attackedEnemy == null) {
             for (Enemy e : enemys) {
                 if (e.inRange(source)) {
@@ -180,10 +176,11 @@ public class Battleship {
                 }
             }
         }
-        
+
         attackedEnemy.gotAttackedAt(target, hit);
         if (hit) {
-            System.out.println(attackedEnemy + " got hit");
+            System.out.println("[battleship/logAttack] "
+                    + attackedEnemy + " got hit");
         }
     }
 
@@ -194,6 +191,7 @@ public class Battleship {
      * @param interval
      */
     public void attack(ID enemy, int interval) {
+        // this should find best enemy
         ID target = getIdInInterval(enemy, interval);
         Network.getInstance().shoot(target);
     }
@@ -209,6 +207,17 @@ public class Battleship {
     private ID getIdInInterval(ID enemy, int interval) {
         return null;
     }
+/**
+ * TODO
+ */
+    private ID getBestTarget() {
+        for (Enemy e : enemys) {
+            if (!(e.getNumberOfHits() == 2)) {
+
+            }
+        }
+        return null;
+    }
 
     /**
      * @return the shipsLeft
@@ -221,7 +230,7 @@ public class Battleship {
         return alive;
     }
 
-    public void setTurn(boolean turn) {
+    public void hasTurn(boolean turn) {
         this.turn = turn;
     }
 

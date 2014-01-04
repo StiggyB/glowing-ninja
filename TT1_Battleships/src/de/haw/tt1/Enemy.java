@@ -1,31 +1,31 @@
 package de.haw.tt1;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import de.uniba.wiai.lspi.chord.data.ID;
 
 public class Enemy {
 
-    private ID        id;
-    private ID        predecessor;
-    private int       hits;
-    private int       ships;
-    private final int intervals;
-    private boolean[] map;
+    private ID         enemyID;
+    private ID         predecessorID;
+    private int        hits;
+    private boolean[]  map;
+    private BigInteger intervalSize;
+    private int        nIntervals;
 
     /**
-     * Enemy Class, to keep track of our enemy's data an ship losses
+     * Enemy Class, to keep track of our enemy's data an ship losses. Takes
+     * Enemys Id an it's predecessor ID as parameters
      * 
-     * @param id
-     * @param predecessor
-     * @param ships
-     * @param intervals
+     * @param enemyID
+     * @param predecessorID
      */
-    public Enemy(ID id, ID predecessor, int ships, int intervals) {
-        this.id = id;
-        this.predecessor = predecessor;
-        this.ships = ships;
-        this.intervals = intervals;
+    public Enemy(ID enemyID, ID predecessorID, int nIntervals) {
+        this.enemyID = enemyID;
+        this.predecessorID = predecessorID;
+        this.nIntervals = nIntervals;
+        calcIntervalSize();
     }
 
     /**
@@ -43,25 +43,51 @@ public class Enemy {
     }
 
     /**
-     * Calculates the interval where this id is in and returns it
+     * Calculates the interval where this id is in and returns it Wrap around
+     * should work with .addPowerOfTwo(160)
      * 
      * @param id
      *            whose interval is searched
      * @return the interval
      */
     private int calculateInterval(ID id) {
-        // TODO Auto-generated method stub
-        return 0;
+        BigInteger upperIntervalBorder = null;
+        BigInteger lowerIntervalBorder = predecessorID.toBigInteger();
+
+        for (int i = 0; i < nIntervals - 1; i++) {
+            upperIntervalBorder = lowerIntervalBorder
+                    .add(intervalSize);
+            if (ID.valueOf(
+                    id.addPowerOfTwo(enemyID.getLength() - 1)
+                            .toBigInteger().add(new BigInteger("-1")))
+                    .isInInterval(ID.valueOf(lowerIntervalBorder),
+                            ID.valueOf(upperIntervalBorder))) {
+                System.out.println("[enemy] Interval: " + i);
+                return i;
+            }
+            lowerIntervalBorder = upperIntervalBorder;
+        }
+        System.out
+                .println("[enemy] Interval not found, that should not happen");
+        return -1;
+    }
+
+    private void calcIntervalSize() {
+        BigInteger range = enemyID.addPowerOfTwo(
+                enemyID.getLength() - 1).toBigInteger().add(
+                new BigInteger("-1")).subtract(
+                predecessorID.toBigInteger());
+        intervalSize = range.divide(BigInteger.valueOf(nIntervals));
     }
 
     public boolean contains(Enemy e) {
         if (!(e instanceof Enemy))
             return false;
-        return this.id.equals(e.getId());
+        return this.enemyID.equals(e.getId());
     }
 
     public boolean inRange(ID player) {
-        return player.isInInterval(predecessor, id);
+        return player.isInInterval(predecessorID, enemyID);
     }
 
     /**
@@ -73,10 +99,9 @@ public class Enemy {
      *         enemy
      */
     public Enemy setNewPredecessor(ID newPredecessor) {
-        ID oldPredecessor = predecessor;
-        predecessor = newPredecessor;
-        return new Enemy(newPredecessor, oldPredecessor, ships,
-                intervals);
+        ID oldPredecessor = predecessorID;
+        predecessorID = newPredecessor;
+        return new Enemy(newPredecessor, oldPredecessor, nIntervals);
     }
 
     /**
@@ -85,15 +110,24 @@ public class Enemy {
      * 
      * @return number of ships left
      */
-    public int getNumberOfShipsLeft() {
-        return ships - hits;
+    public int getNumberOfHits() {
+        return hits;
     }
 
     /**
-     * @return the id
+     * 
+     * @return enemyID
      */
     public ID getId() {
-        return id;
+        return enemyID;
+    }
+
+    /**
+     * 
+     * @return predecessorID
+     */
+    public ID getPredecesorID() {
+        return predecessorID;
     }
 
     /*
@@ -103,8 +137,8 @@ public class Enemy {
      */
     @Override
     public String toString() {
-        return "Enemy [id=" + id + ",\n predecessor=" + predecessor
-                + ",\n ships=" + ships + ", map="
+        return "Enemy [id=" + enemyID + ",\n predecessor="
+                + predecessorID + ",\n " + ", map="
                 + Arrays.toString(map) + "]\n\n";
     }
 

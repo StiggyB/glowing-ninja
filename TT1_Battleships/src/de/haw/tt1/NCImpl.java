@@ -14,22 +14,26 @@ public class NCImpl implements NotifyCallback {
     public void retrieved(ID target) {
         boolean hit = Battleship.getInstance().gotHit(target);
         Network.getInstance().getChord().broadcast(target, hit);
-        System.out.printf("[retreived] Enemy attacks at %s\n and %s\n",
-                target, hit ? "hits target." : "misses target."); // fancy!
+        System.out.printf(
+                "[retreived] Enemy attacks at %s\n and %s\n", target,
+                hit ? "hits target." : "misses target."); // fancy!
 
         if (Battleship.getInstance().getShipsLeft() <= 0) {
             InputStream in;
             try {
-                in = new FileInputStream(new File("C:\\Users\\Benjamin\\git\\glowing-ninja\\TT1_Battleships\\DEATH.WAV"));
+                in = new FileInputStream(
+                        new File(
+                                "C:\\Users\\Benjamin\\git\\glowing-ninja\\TT1_Battleships\\DEATH.WAV"));
                 AudioStream as;
                 as = new AudioStream(in);
                 AudioPlayer.player.start(as);
+                Battleship.getInstance().hasTurn(false);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("All our ships sunk!");
+            System.out.println("[retreived] asAll our ships sunk!");
         } else {
-            Battleship.getInstance().setTurn(true);
+            Battleship.getInstance().hasTurn(true);
         }
     }
 
