@@ -13,6 +13,8 @@ public class Enemy {
     private boolean[]  map;
     private BigInteger intervalSize;
     private int        nIntervals;
+    private boolean	   isDefeated;
+    private int 	   nShips;
 
     /**
      * Enemy Class, to keep track of our enemy's data an ship losses. Takes
@@ -21,14 +23,17 @@ public class Enemy {
      * @param enemyID
      * @param predecessorID
      */
-    public Enemy(ID enemyID, ID predecessorID, int nIntervals) {
+    public Enemy(ID enemyID, ID predecessorID, int nIntervals, int nShips) {
         this.enemyID = enemyID;
         this.predecessorID = predecessorID;
         this.nIntervals = nIntervals;
+        this.isDefeated = false;
+        this.nShips = nShips;
         calcIntervalSize();
     }
 
-    /**
+
+	/**
      * Files where an enemy got attacked (id) and if a ship got hit
      * 
      * @param id
@@ -40,6 +45,8 @@ public class Enemy {
         int interval = calculateInterval(id);
         if (hit)
             hits++;
+        
+        this.checkAndSetDefeated();
     }
 
     /**
@@ -101,7 +108,7 @@ public class Enemy {
     public Enemy setNewPredecessor(ID newPredecessor) {
         ID oldPredecessor = predecessorID;
         predecessorID = newPredecessor;
-        return new Enemy(newPredecessor, oldPredecessor, nIntervals);
+        return new Enemy(newPredecessor, oldPredecessor, nIntervals,nShips);
     }
 
     /**
@@ -141,5 +148,28 @@ public class Enemy {
                 + predecessorID + ",\n " + ", map="
                 + Arrays.toString(map) + "]\n\n";
     }
+    
+    
+
+    public boolean isDefeated() {
+		return isDefeated;
+	}
+
+    public boolean checkDefeated(){
+    	if (nShips > this.hits){
+    		return false;
+    	}
+    	return true;
+    }
+    
+	public void setDefeated(boolean isDefeated) {
+		this.isDefeated = isDefeated;
+	}
+	
+	public boolean checkAndSetDefeated(){
+		boolean defeated = checkDefeated();
+    	setDefeated(defeated);
+    	return defeated;
+	}
 
 }

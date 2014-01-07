@@ -143,11 +143,11 @@ public class Battleship {
                 .getFingerTable();
 
         enemys.add(new Enemy(fingerTable.get(0).getNodeID(), myID,
-                nIntervals));
+                nIntervals,nShips));
 
         for (int i = 1; i < fingerTable.size(); i++) {
             enemys.add(new Enemy(fingerTable.get(i).getNodeID(),
-                    fingerTable.get(i - 1).getNodeID(), nIntervals));
+                    fingerTable.get(i - 1).getNodeID(), nIntervals,nShips));
         }
     }
 
