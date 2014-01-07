@@ -13,6 +13,7 @@ public class Enemy {
     private boolean[]  map;
     private BigInteger intervalSize;
     private int        nIntervals;
+    private boolean[]  attackedIntervals;
 
     /**
      * Enemy Class, to keep track of our enemy's data an ship losses. Takes
@@ -26,10 +27,11 @@ public class Enemy {
         this.predecessorID = predecessorID;
         this.nIntervals = nIntervals;
         calcIntervalSize();
+        attackedIntervals = new boolean[nIntervals];
     }
 
     /**
-     * Files where an enemy got attacked (id) and if a ship got hit
+     * Files where an enemy got attacked (id/interval) and if a ship got hit
      * 
      * @param id
      *            the enemy was attacked at
@@ -37,7 +39,7 @@ public class Enemy {
      *            true if enemy ship was hit, false if not
      */
     public void gotAttackedAt(ID id, boolean hit) {
-        int interval = calculateInterval(id);
+        attackedIntervals[calculateInterval(id)] = true;
         if (hit)
             hits++;
     }
@@ -55,32 +57,67 @@ public class Enemy {
         BigInteger lowerIntervalBorder = predecessorID.toBigInteger();
 
         for (int i = 0; i < nIntervals - 1; i++) {
-            upperIntervalBorder = lowerIntervalBorder
-                    .add(intervalSize);
-            if (ID.valueOf(
-                    id.addPowerOfTwo(enemyID.getLength() - 1)
-                            .toBigInteger().add(new BigInteger("-1")))
-                    .isInInterval(ID.valueOf(lowerIntervalBorder),
-                            ID.valueOf(upperIntervalBorder))) {
+            upperIntervalBorder = ID.valueOf(
+                    lowerIntervalBorder.add(intervalSize))
+                    .addPowerOfTwo(id.getLength() - 1).toBigInteger();
+
+            if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
+                    .valueOf(upperIntervalBorder))) {
                 System.out.println("[enemy] Interval: " + i);
                 return i;
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
+
         System.out
                 .println("[enemy] Interval not found, that should not happen");
+
         return -1;
     }
 
     private void calcIntervalSize() {
-        BigInteger range = enemyID.addPowerOfTwo(
-                enemyID.getLength() - 1).toBigInteger().add(
-                new BigInteger("-1")).subtract(
-                predecessorID.toBigInteger());
+        System.out.println("[enemy/calcIntervalSize] id length="
+                + enemyID.getLength());
+
+        BigInteger enemyIDBigInt = enemyID.toBigInteger();
+        BigInteger predecessorIDBigInt = predecessorID
+                .toBigInteger();
+        System.out.println("[enemy/calcIntervalSize] PredecessorID=" + predecessorID);
+        BigInteger range = enemyIDBigInt
+                .subtract(predecessorIDBigInt);
+
+        System.out.println("[enemy/calcIntervalSize] range="+range);
+        range = ID.valueOf(range).addPowerOfTwo(
+                enemyID.getLength() - 1).toBigInteger();
+        System.out.println("[enemy/calcIntervalSize] rangeWithPower="+range);
+
         intervalSize = range.divide(BigInteger.valueOf(nIntervals));
+
+        System.out.println("[enemy/calcIntervalSize] IntervalSize="
+                + intervalSize + " of Enemy " + enemyID);
     }
 
-    public boolean contains(Enemy e) {
+    /**
+     * TODO omg... NOT WORKING
+     * 
+     * @param i
+     * @return ID in interval i
+     */
+    public ID getIdInInterval(int i) {
+
+        BigInteger predecessorIDBigInt = predecessorID
+                .toBigInteger();
+        BigInteger iBigInt = BigInteger.valueOf(i);
+
+        BigInteger intervalBigInt = intervalSize
+                .multiply(iBigInt);
+
+        return ID
+                .valueOf(predecessorIDBigInt.add(intervalBigInt))
+                .addPowerOfTwo(enemyID.getLength() - 1);
+    }
+
+    public boolean equals(Enemy e) {
         if (!(e instanceof Enemy))
             return false;
         return this.enemyID.equals(e.getId());
@@ -100,13 +137,16 @@ public class Enemy {
      */
     public Enemy setNewPredecessor(ID newPredecessor) {
         ID oldPredecessor = predecessorID;
+        System.out.println("New Predecessor set: " + newPredecessor
+                + ", old: " + oldPredecessor);
         predecessorID = newPredecessor;
+        calcIntervalSize();
         return new Enemy(newPredecessor, oldPredecessor, nIntervals);
     }
 
     /**
-     * Returns the number of ships left for this enemy, do not attack if ships
-     * == 2!
+     * Returns the amount of hits this enemy retreived Not attack if hits -
+     * nShips == 2!
      * 
      * @return number of ships left
      */
@@ -128,6 +168,21 @@ public class Enemy {
      */
     public ID getPredecesorID() {
         return predecessorID;
+    }
+
+    /**
+     * @return the attackedIntervals
+     */
+    protected boolean[] getAttackedIntervals() {
+        return attackedIntervals;
+    }
+
+    /**
+     * @param attackedIntervals
+     *            the attackedIntervals to set
+     */
+    protected void setAttackedIntervals(boolean[] attackedIntervals) {
+        this.attackedIntervals = attackedIntervals;
     }
 
     /*
