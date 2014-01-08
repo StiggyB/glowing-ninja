@@ -7,15 +7,18 @@ import de.uniba.wiai.lspi.chord.data.ID;
 
 public class Enemy {
 
-    private ID         enemyID;
-    private ID         predecessorID;
-    private int        hits;
-    private boolean[]  map;
-    private BigInteger intervalSize;
-    private int        nIntervals;
-    private boolean	   isDefeated;
-    private int 	   nShips;
-    private boolean[]  attackedIntervals;
+    private ID               enemyID;
+    private ID               predecessorID;
+    private int              hits;
+    private boolean[]        map;
+    private BigInteger       intervalSize;
+    private int              nIntervals;
+    private boolean          isDefeated;
+    private int              nShips;
+    private boolean[]        attackedIntervals;
+    private final BigInteger maxVal = (new BigInteger("2").pow(160))
+                                            .subtract(new BigInteger(
+                                                    "1"));
 
     /**
      * Enemy Class, to keep track of our enemy's data an ship losses. Takes
@@ -24,7 +27,8 @@ public class Enemy {
      * @param enemyID
      * @param predecessorID
      */
-    public Enemy(ID enemyID, ID predecessorID, int nIntervals, int nShips) {
+    public Enemy(ID enemyID, ID predecessorID, int nIntervals,
+            int nShips) {
         this.enemyID = enemyID;
         this.predecessorID = predecessorID;
         this.nIntervals = nIntervals;
@@ -34,8 +38,7 @@ public class Enemy {
         attackedIntervals = new boolean[nIntervals];
     }
 
-
-	/**
+    /**
      * Files where an enemy got attacked (id/interval) and if a ship got hit
      * 
      * @param id
@@ -44,10 +47,10 @@ public class Enemy {
      *            true if enemy ship was hit, false if not
      */
     public void gotAttackedAt(ID id, boolean hit) {
-        attackedIntervals[calculateInterval(id)] = true;
-        if (hit)
+        if (hit && !attackedIntervals[calculateInterval(id)])
             hits++;
         
+        attackedIntervals[calculateInterval(id)] = true;
         this.checkAndSetDefeated();
     }
 
@@ -63,20 +66,19 @@ public class Enemy {
         BigInteger upperIntervalBorder = null;
         BigInteger lowerIntervalBorder = predecessorID.toBigInteger();
 
-        for (int i = 0; i < nIntervals - 1; i++) {
-            upperIntervalBorder = ID.valueOf(
-                    lowerIntervalBorder.add(intervalSize))
-                    .addPowerOfTwo(id.getLength() - 1).toBigInteger();
+        for (int i = 0; i < nIntervals; i++) {
+            upperIntervalBorder = lowerIntervalBorder.add(
+                    intervalSize).add(maxVal).mod(maxVal);
 
             if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
                     .valueOf(upperIntervalBorder))) {
-                System.out.println("[enemy] Interval: " + i);
+                System.out.println("[enemy] attacked interval: " + i);
                 return i;
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
 
-        System.out
+        System.err
                 .println("[enemy] Interval not found, that should not happen");
 
         return -1;
@@ -87,16 +89,16 @@ public class Enemy {
                 + enemyID.getLength());
 
         BigInteger enemyIDBigInt = enemyID.toBigInteger();
-        BigInteger predecessorIDBigInt = predecessorID
-                .toBigInteger();
-        System.out.println("[enemy/calcIntervalSize] PredecessorID=" + predecessorID);
+        BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
+        System.out.println("[enemy/calcIntervalSize] PredecessorID="
+                + predecessorID);
         BigInteger range = enemyIDBigInt
                 .subtract(predecessorIDBigInt);
 
-        System.out.println("[enemy/calcIntervalSize] range="+range);
-        range = ID.valueOf(range).addPowerOfTwo(
-                enemyID.getLength() - 1).toBigInteger();
-        System.out.println("[enemy/calcIntervalSize] rangeWithPower="+range);
+        System.out.println("[enemy/calcIntervalSize] range=" + range);
+        range = range.add(maxVal).mod(maxVal);
+        System.out.println("[enemy/calcIntervalSize] rangeWithPower="
+                + range);
 
         intervalSize = range.divide(BigInteger.valueOf(nIntervals));
 
@@ -112,16 +114,13 @@ public class Enemy {
      */
     public ID getIdInInterval(int i) {
 
-        BigInteger predecessorIDBigInt = predecessorID
-                .toBigInteger();
+        BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
         BigInteger iBigInt = BigInteger.valueOf(i);
 
-        BigInteger intervalBigInt = intervalSize
-                .multiply(iBigInt);
+        BigInteger intervalBigInt = (intervalSize.multiply(iBigInt)).add(BigInteger.ONE);
 
-        return ID
-                .valueOf(predecessorIDBigInt.add(intervalBigInt))
-                .addPowerOfTwo(enemyID.getLength() - 1);
+        return ID.valueOf(predecessorIDBigInt.add(intervalBigInt)
+                .add(maxVal).mod(maxVal));
     }
 
     public boolean equals(Enemy e) {
@@ -148,7 +147,8 @@ public class Enemy {
                 + ", old: " + oldPredecessor);
         predecessorID = newPredecessor;
         calcIntervalSize();
-        return new Enemy(newPredecessor, oldPredecessor, nIntervals,nShips);
+        return new Enemy(newPredecessor, oldPredecessor, nIntervals,
+                nShips);
     }
 
     /**
@@ -203,28 +203,26 @@ public class Enemy {
                 + predecessorID + ",\n " + ", map="
                 + Arrays.toString(map) + "]\n\n";
     }
-    
-    
 
     public boolean isDefeated() {
-		return isDefeated;
-	}
-
-    public boolean checkDefeated(){
-    	if (nShips > this.hits){
-    		return false;
-    	}
-    	return true;
+        return isDefeated;
     }
-    
-	public void setDefeated(boolean isDefeated) {
-		this.isDefeated = isDefeated;
-	}
-	
-	public boolean checkAndSetDefeated(){
-		boolean defeated = checkDefeated();
-    	setDefeated(defeated);
-    	return defeated;
-	}
+
+    public boolean checkDefeated() {
+        if (nShips > this.hits) {
+            return false;
+        }
+        return true;
+    }
+
+    public void setDefeated(boolean isDefeated) {
+        this.isDefeated = isDefeated;
+    }
+
+    public boolean checkAndSetDefeated() {
+        boolean defeated = checkDefeated();
+        setDefeated(defeated);
+        return defeated;
+    }
 
 }

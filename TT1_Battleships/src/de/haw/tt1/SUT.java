@@ -99,7 +99,7 @@ public class SUT {
                         Battleship.getInstance().attackEnemy(
                                 Integer.parseInt(cmd));
                     else {
-                        Battleship.getInstance().attackEnemy();
+                        Battleship.getInstance().attackBestTarget();
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -110,22 +110,38 @@ public class SUT {
         }
 
         // this will be the main game loop
-        // while (Battleship.getInstance().isAlive()) {
-        // if (Battleship.getInstance().getTurn()) {
-        // do {
-        // target = chord.getRandomID();
-        // } while (target.isInInterval(
-        // chord.getPredecessorID(), chord.getChordID()));
-        // chord.shoot(target);
-        // try {
-        // Thread.sleep(1000);
-        // } catch (InterruptedException e) {
-        // // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // }
-        // }
-        // }
+        while (Battleship.getInstance().isAlive()) {
+            if (Battleship.getInstance().getTurn()) {
+                try {
+                    Battleship.getInstance().attackBestTarget();
+                } catch (EnemyNotFoundException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
 
+        while(!cmd.equals("exit")){
+            System.out.println(":'-(");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         // stop input
         in.close();
         chord.leave();
@@ -134,7 +150,7 @@ public class SUT {
     private static void printCommands() {
         System.out.println("-- Help --");
         System.out.println("h - show help");
-        System.out.println("q - quit game");
+        System.out.println("q - quit game and start automatism");
         System.out.println("s - shoot randomly");
         System.out
                 .println("map - print location of our ships and fingetable");

@@ -1165,18 +1165,11 @@ public final class ChordImpl implements Chord, Report, AsynChord {
 
         Collections.sort(fingertable_noduplicates);
         ID range;
-        
-        byte[] tmp = new byte[getID().getLength() / 8];
-        for (int i = 0; i < getID().getLength() / 8; i++) {
-            tmp[i] = (byte) 0xFE;
-        }
 
         for (int i = 0; i < fingertable_noduplicates.size(); i++) {
-            range = i + 1 < fingertable_noduplicates.size() 
-                    ? fingertable_noduplicates.get(i + 1).getNodeID()
-                            : new ID(tmp);
-//                    : fingertable_noduplicates.get(0).getNodeID();
-            // : this.getID();
+            range = i + 1 < fingertable_noduplicates.size() ? fingertable_noduplicates
+                    .get(i + 1).getNodeID()
+                    : this.getID();
             try {
                 fingertable_noduplicates.get(i).broadcast(
                         new Broadcast(range, this.localID, target,

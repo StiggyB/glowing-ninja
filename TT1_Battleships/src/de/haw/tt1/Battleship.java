@@ -12,18 +12,22 @@ public class Battleship {
 
     private int               nIntervals;
     private int               nShips;
-    private boolean[]         map          = null;
-    private ID                predecessor  = Network
-                                                   .getInstance()
-                                                   .getPredecessorID();
-    private ID                myID         = Network.getInstance()
-                                                   .getChordID();
+    private boolean[]         map           = null;
+    private ID                predecessorID = Network
+                                                    .getInstance()
+                                                    .getPredecessorID();
+    private ID                myID          = Network.getInstance()
+                                                    .getChordID();
     private int               shipsLeft;
-    private volatile boolean  alive        = true;
-    private boolean           turn         = false;
+    private volatile boolean  alive         = true;
+    private boolean           turn          = false;
     private List<Enemy>       enemies       = new ArrayList<>();
-    private BigInteger        intervalSize = null;
-    private static Battleship game         = new Battleship();
+    private BigInteger        intervalSize  = null;
+    private final BigInteger  maxVal        = (new BigInteger("2")
+                                                    .pow(160))
+                                                    .subtract(new BigInteger(
+                                                            "1"));
+    private static Battleship game          = new Battleship();
 
     // --CONSTRUCTORS--//
     /**
@@ -78,21 +82,13 @@ public class Battleship {
      */
     private int checkInterval(ID id) {
         BigInteger upperIntervalBorder = null;
-        BigInteger lowerIntervalBorder = predecessor.toBigInteger();
+        BigInteger lowerIntervalBorder = predecessorID.toBigInteger();
+        calcIntervalSize();
 
-        BigInteger range = ID.valueOf(
-                myID.toBigInteger().subtract(lowerIntervalBorder))
-                .addPowerOfTwo(myID.getLength() - 1).toBigInteger();
-        System.out.println("[battleship/checkInterval] range:" + range);
-        
-        intervalSize = range.divide(BigInteger.valueOf(nIntervals));
-        System.out.println("[battleship/checkInterval] intervalSize:" + intervalSize);
+        for (int i = 0; i < nIntervals; i++) {
+            upperIntervalBorder = lowerIntervalBorder.add(
+                    intervalSize).add(maxVal).mod(maxVal);
 
-        for (int i = 0; i < nIntervals - 1; i++) {
-            upperIntervalBorder = ID.valueOf(
-                    lowerIntervalBorder.add(intervalSize))
-                    .addPowerOfTwo(id.getLength() - 1).toBigInteger();
-            
             if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
                     .valueOf(upperIntervalBorder))) {
                 System.out
@@ -104,6 +100,16 @@ public class Battleship {
         }
 
         return -1;
+    }
+
+    private void calcIntervalSize() {
+        BigInteger myIDBigInt = myID.toBigInteger();
+        BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
+        BigInteger range = myIDBigInt.subtract(predecessorIDBigInt);
+
+        range = range.add(maxVal).mod(maxVal);
+
+        intervalSize = range.divide(BigInteger.valueOf(nIntervals));
     }
 
     /**
@@ -134,8 +140,8 @@ public class Battleship {
         for (int i = 0; i < myID.getLength() / 8; i++) {
             tmp[i] = (byte) 0xFF;
         }
-        return this.turn = new ID(tmp)
-                .isInInterval(predecessor, myID);
+        return this.turn = new ID(tmp).isInInterval(predecessorID,
+                myID);
     }
 
     private void fileEnemys() {
@@ -143,18 +149,31 @@ public class Battleship {
                 .getFingerTable();
 
         enemies.add(new Enemy(fingerTable.get(0).getNodeID(), myID,
-                nIntervals,nShips));
+                nIntervals, nShips));
+        enemies.add(new Enemy(predecessorID, fingerTable.get(0)
+                .getNodeID(), nIntervals, nShips));
 
         for (int i = 1; i < fingerTable.size(); i++) {
-             Enemy newEnemy = new Enemy(fingerTable.get(i).getNodeID(),
-                    fingerTable.get(i - 1).getNodeID(), nIntervals, nShips);
+            ID enemyID = fingerTable.get(i).getNodeID();
+            ID preEnemyID = fingerTable.get(i - 1).getNodeID();
+
+            if (myID.isInInterval(preEnemyID, enemyID)) {
+                preEnemyID = myID;
+            }
+
+            Enemy newEnemy = new Enemy(enemyID, preEnemyID,
+                    nIntervals, nShips);
+
             for (Enemy e : enemies) {
                 if (e.inRange(newEnemy.getId())) {
-                    e.setNewPredecessor(newEnemy.getId());
+                    newEnemy = e.setNewPredecessor(newEnemy.getId());
                 }
             }
             enemies.add(newEnemy);
         }
+
+        enemies.add(new Enemy(myID, predecessorID, nIntervals, nShips));
+
     }
 
     /**
@@ -193,12 +212,19 @@ public class Battleship {
         }
     }
 
-    /**
-     * Attacks the best available Enemy
-     */
-    public void attackEnemy() {
-        ID target = getBestTarget();
-        Network.getInstance().shoot(target);
+    class Shooter implements Runnable {
+
+        ID target;
+
+        public Shooter(ID target) {
+            this.target = target;
+        }
+
+        @Override
+        public void run() {
+            Network.getInstance().shoot(target);
+        }
+
     }
 
     /**
@@ -217,15 +243,20 @@ public class Battleship {
                 for (int j = 0; j < e.getAttackedIntervals().length; j++) {
                     if (!e.getAttackedIntervals()[j]) {
                         target = e.getIdInInterval(j);
+                        break;
                     }
                 }
             }
         }
         if (target == null) {
             throw new EnemyNotFoundException("No such enemy");
+        } else {
+            System.out.println("[battleship/attackEnemy] shooting at: " + target);
         }
-
-        Network.getInstance().shoot(target);
+        this.turn = false;
+        Shooter shooter = new Shooter(target);
+        Thread t = new Thread(shooter);
+        t.start();
     }
 
     // --GETTER AND SETTER--//
@@ -234,32 +265,35 @@ public class Battleship {
      * Should return an ID in an Interval of the enemy
      * 
      * @return target ID
+     * @throws EnemyNotFoundException
      */
-    private ID getBestTarget() {
+    public void attackBestTarget() throws EnemyNotFoundException {
         ID target = null;
+        int shipsLeft = Integer.MAX_VALUE;
+
         for (Enemy e : enemies) {
-            int shipsLeft = nShips - e.getNumberOfHits();
-            if (shipsLeft > 2) {
-                for (int i = 0; i < e.getAttackedIntervals().length; i++) {
-                    if (e.getAttackedIntervals()[i] == false) {
-                        // temporär zu debug zwecken:
-                        boolean[] tmp = e.getAttackedIntervals();
-                        tmp[i] = true;
-                        e.setAttackedIntervals(tmp);
-                        // ************************
-                        target = e.getIdInInterval(i);
-                        break;
-                    }
-                }
-            } else if (shipsLeft == 1) {
-                for (int i = 0; i < e.getAttackedIntervals().length; i++) {
-                    if (e.getAttackedIntervals()[i] == false) {
-                        return e.getIdInInterval(i);
-                    }
+            if (!e.getId().equals(myID)
+                    && nShips - e.getNumberOfHits() < shipsLeft
+                    && nShips - e.getNumberOfHits() != 2) {
+                shipsLeft = nShips - e.getNumberOfHits();
+                target = e.getId();
+            }
+        }
+
+        if (target == null) {
+            for (Enemy e : enemies) {
+                if (!e.getId().equals(myID) && !e.isDefeated()) {
+                    target = e.getId();
+                    break;
                 }
             }
         }
-        return target;
+
+        for (int i = 0; i < enemies.size(); i++) {
+            if (enemies.get(i).getId().equals(target))
+                attackEnemy(i);
+        }
+
     }
 
     /**
