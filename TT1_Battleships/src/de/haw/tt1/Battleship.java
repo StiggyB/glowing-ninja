@@ -1,9 +1,16 @@
 package de.haw.tt1;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import sun.audio.AudioPlayer;
+import sun.audio.AudioStream;
 
 import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
@@ -27,6 +34,7 @@ public class Battleship {
                                                     .pow(160))
                                                     .subtract(new BigInteger(
                                                             "1"));
+    private ID                lastTarget    = null;
     private static Battleship game          = new Battleship();
 
     // --CONSTRUCTORS--//
@@ -204,7 +212,7 @@ public class Battleship {
                 }
             }
         }
-        
+
         for (Enemy e : enemies) {
             for (Enemy y : enemies) {
                 if (!e.equals(y) && e.inRange(y.getId())) {
@@ -217,6 +225,24 @@ public class Battleship {
         if (hit) {
             System.out.println("[battleship/logAttack] "
                     + attackedEnemy + " got hit");
+        }
+        if (lastTarget != null && attackedEnemy.isDefeated()) {
+            System.out.println(attackedEnemy.getId() + " is defeated.");
+            if(lastTarget.equals(target)){
+                System.out.println(" and we finished him off!");
+                InputStream in;
+                try {
+                    in = new FileInputStream(
+                            new File(
+                                    "C:\\Users\\Benjamin\\git\\glowing-ninja\\TT1_Battleships\\TaDa.wav"));
+                    AudioStream as;
+                    as = new AudioStream(in);
+                    AudioPlayer.player.start(as);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("GAME OVER!");
         }
     }
 
@@ -244,18 +270,21 @@ public class Battleship {
      */
     public void attackEnemy(Enemy enemy)
             throws EnemyNotFoundException {
-
+        int intervall = 0;
         ID target = null;
         for (Enemy e : enemies) {
             if (e.equals(enemy)) {
-                for (int j = 0; j < e.getAttackedIntervals().length; j++) {
-                    if (!e.getAttackedIntervals()[j]) {
-                        target = e.getIdInInterval(j);
-                        break;
+                do {
+                    intervall = (int) (Math.random() * e
+                            .getAttackedIntervals().length);
+
+                    if (!e.getAttackedIntervals()[intervall]) {
+                        target = e.getIdInInterval(intervall);
                     }
-                }
+                } while (target == null);
             }
         }
+
         if (target == null) {
             throw new EnemyNotFoundException("No such enemy");
         } else {
@@ -265,6 +294,7 @@ public class Battleship {
         }
 
         this.turn = false;
+        this.lastTarget = target;
         Shooter shooter = new Shooter(target);
         Thread t = new Thread(shooter);
         t.start();
