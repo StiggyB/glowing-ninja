@@ -451,9 +451,10 @@ public final class NodeImpl extends Node {
         List<Node> fingerTable_inRange = new ArrayList<Node>();
 
         if (impl.getTransactionID() >= info.getTransaction()) {
-            System.err.println("my tid >= bcast tid");
+            System.err.println("--broadcast called. tid="
+                    + info.getTransaction());
         }
-        
+
         for (Node n : fingerTable) {
             if (!this.getNodeID().equals(info.getRange())
                     && n.getNodeID().isInInterval(this.getNodeID(),
@@ -475,7 +476,7 @@ public final class NodeImpl extends Node {
                             .getTarget(), info.getTransaction(), info
                             .getHit()));
         }
-        
+
         impl.setTransactionID(info.getTransaction());
 
         // finally inform application

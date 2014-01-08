@@ -71,11 +71,15 @@ public class SUT {
         }
 
         // chord.getChord().broadcast(chord.getChordID(), true);
+        printCommands();
 
         ID target;
         while (!cmd.equals("q")) {
             cmd = in.nextLine();
-            if (cmd.equals("s") && Battleship.getInstance().isAlive()) {
+            if (cmd.equals("h")) {
+                printCommands();
+            } else if (cmd.equals("s")
+                    && Battleship.getInstance().isAlive()) {
                 do {
                     target = chord.getRandomID();
                 } while (target.isInInterval(
@@ -86,29 +90,56 @@ public class SUT {
                 Battleship.getInstance().printFingerTable();
             } else if (cmd.equals("e")) {
                 Battleship.getInstance().printEnemys();
+            } else if (cmd.equals("a")) {
+                System.out
+                        .println("Enter number of enemy or a String for best enemy");
+                cmd = in.nextLine();
+                try {
+                    if (cmd.matches("^[0-9]+$"))
+                        Battleship.getInstance().attackEnemy(
+                                Integer.parseInt(cmd));
+                    else {
+                        Battleship.getInstance().attackEnemy();
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                } catch (EnemyNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
         // this will be the main game loop
-//        while (Battleship.getInstance().isAlive()) {
-//            if (Battleship.getInstance().getTurn()) {
-//                do {
-//                    target = chord.getRandomID();
-//                } while (target.isInInterval(
-//                        chord.getPredecessorID(), chord.getChordID()));
-//                chord.shoot(target);
-//                try {
-//                    Thread.sleep(1000);
-//                } catch (InterruptedException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
+        // while (Battleship.getInstance().isAlive()) {
+        // if (Battleship.getInstance().getTurn()) {
+        // do {
+        // target = chord.getRandomID();
+        // } while (target.isInInterval(
+        // chord.getPredecessorID(), chord.getChordID()));
+        // chord.shoot(target);
+        // try {
+        // Thread.sleep(1000);
+        // } catch (InterruptedException e) {
+        // // TODO Auto-generated catch block
+        // e.printStackTrace();
+        // }
+        // }
+        // }
 
         // stop input
         in.close();
         chord.leave();
+    }
+
+    private static void printCommands() {
+        System.out.println("-- Help --");
+        System.out.println("h - show help");
+        System.out.println("q - quit game");
+        System.out.println("s - shoot randomly");
+        System.out
+                .println("map - print location of our ships and fingetable");
+        System.out.println("e - print enemys");
+        System.out.println("a - attack enemy");
     }
 
 }

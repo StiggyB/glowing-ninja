@@ -31,7 +31,7 @@ public class NCImpl implements NotifyCallback {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("[retreived] asAll our ships sunk!");
+            System.out.println("[retreived] All our ships sunk!");
         } else {
             Battleship.getInstance().hasTurn(true);
         }
