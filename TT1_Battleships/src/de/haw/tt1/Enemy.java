@@ -107,9 +107,9 @@ public class Enemy {
     }
 
     /**
-     * TODO omg... NOT WORKING
+     * Get ID in given intervall i
      * 
-     * @param i
+     * @param i interval
      * @return ID in interval i
      */
     public ID getIdInInterval(int i) {

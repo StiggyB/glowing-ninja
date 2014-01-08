@@ -230,16 +230,15 @@ public class Battleship {
     /**
      * Attacks given enemy
      * 
-     * @param enemyNo
+     * @param enemy
      *            the enemys number
      * @throws EnemyNotFoundException
      */
-    public void attackEnemy(int enemyNo)
+    public void attackEnemy(Enemy enemy)
             throws EnemyNotFoundException {
-        int i = 0;
         ID target = null;
         for (Enemy e : enemies) {
-            if (i++ == enemyNo) {
+            if (e.equals(enemy)) {
                 for (int j = 0; j < e.getAttackedIntervals().length; j++) {
                     if (!e.getAttackedIntervals()[j]) {
                         target = e.getIdInInterval(j);
@@ -291,7 +290,7 @@ public class Battleship {
 
         for (int i = 0; i < enemies.size(); i++) {
             if (enemies.get(i).getId().equals(target))
-                attackEnemy(i);
+                attackEnemy(enemies.get(i));
         }
 
     }

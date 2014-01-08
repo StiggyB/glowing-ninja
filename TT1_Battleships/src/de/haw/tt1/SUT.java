@@ -70,7 +70,6 @@ public class SUT {
             Battleship.getInstance().hasTurn(true);
         }
 
-        // chord.getChord().broadcast(chord.getChordID(), true);
         printCommands();
 
         ID target;
@@ -97,7 +96,8 @@ public class SUT {
                 try {
                     if (cmd.matches("^[0-9]+$"))
                         Battleship.getInstance().attackEnemy(
-                                Integer.parseInt(cmd));
+                                Battleship.getInstance().getEnemys()
+                                        .get(Integer.parseInt(cmd)));
                     else {
                         Battleship.getInstance().attackBestTarget();
                     }
@@ -133,7 +133,7 @@ public class SUT {
             }
         }
 
-        while(!cmd.equals("exit")){
+        while (!cmd.equals("exit")) {
             System.out.println(":'-(");
             try {
                 Thread.sleep(5000);
