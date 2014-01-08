@@ -236,6 +236,7 @@ public class Battleship {
      */
     public void attackEnemy(Enemy enemy)
             throws EnemyNotFoundException {
+
         ID target = null;
         for (Enemy e : enemies) {
             if (e.equals(enemy)) {
@@ -250,8 +251,11 @@ public class Battleship {
         if (target == null) {
             throw new EnemyNotFoundException("No such enemy");
         } else {
-            System.out.println("[battleship/attackEnemy] shooting at: " + target);
+            System.out
+                    .println("[battleship/attackEnemy] shooting at: "
+                            + target);
         }
+
         this.turn = false;
         Shooter shooter = new Shooter(target);
         Thread t = new Thread(shooter);
@@ -290,7 +294,18 @@ public class Battleship {
 
         for (int i = 0; i < enemies.size(); i++) {
             if (enemies.get(i).getId().equals(target))
-                attackEnemy(enemies.get(i));
+                if (enemies.get(i).getId().equals(myID)) {
+                    System.out
+                            .println("[battleship/attackBestTarget] friendly fire!!!1elf");
+                    try {
+                        attackEnemy(enemies.get(i + 1));
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        attackEnemy(enemies.get(i - 1));
+                    }
+                } else {
+                    attackEnemy(enemies.get(i));
+                }
+
         }
 
     }
