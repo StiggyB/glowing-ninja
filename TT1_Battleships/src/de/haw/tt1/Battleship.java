@@ -204,6 +204,14 @@ public class Battleship {
                 }
             }
         }
+        
+        for (Enemy e : enemies) {
+            for (Enemy y : enemies) {
+                if (!e.equals(y) && e.inRange(y.getId())) {
+                    y = e.setNewPredecessor(y.getId());
+                }
+            }
+        }
 
         attackedEnemy.gotAttackedAt(target, hit);
         if (hit) {
