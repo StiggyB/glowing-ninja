@@ -4,13 +4,15 @@ import java.util.Scanner;
 
 import de.uniba.wiai.lspi.chord.data.ID;
 
+/**
+ * Main Class to start or join a game
+ * 
+ * @param args
+ */
 public class SUT {
 
     private static Network chord;
 
-    /**
-     * @param args
-     */
     public static void main(String[] args) {
 
         System.out.println("Battleship game warm up...");
@@ -36,9 +38,9 @@ public class SUT {
 
         System.out.println("Standard Setup 10/5, see code...");
         // System.out.println("Enter number of intervals: ");
-        int intervals = 10;// in.nextInt();
+        int intervals = 100;// in.nextInt();
         // System.out.println("Enter number of ships: ");
-        int ships = 5;// in.nextInt();
+        int ships = 10;// in.nextInt();
 
         if (hoster) {
             System.out.println("Waiting for players...");
@@ -67,12 +69,13 @@ public class SUT {
 
         if (Battleship.getInstance().hasStartID()) {
             System.out.println("WE START!");
-            Battleship.getInstance().hasTurn(true);
+            Battleship.getInstance().setTurn(true);
         }
 
         printCommands();
 
         ID target;
+        // q also leads to the main game loop
         while (!cmd.equals("q")) {
             cmd = in.nextLine();
             if (cmd.equals("h")) {
@@ -109,40 +112,38 @@ public class SUT {
             }
         }
 
-        // this will be the main game loop
+        // this is the main game loop
         while (Battleship.getInstance().isAlive()) {
-            if (Battleship.getInstance().getTurn()) {
+            if (Battleship.getInstance().hasTurn()) {
                 try {
                     Battleship.getInstance().attackBestTarget();
                 } catch (EnemyNotFoundException e1) {
-                    // TODO Auto-generated catch block
                     e1.printStackTrace();
                 }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
 
+        // loosing loop
         while (!cmd.equals("exit")) {
             System.out.println(":'-(");
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
-        // stop input
+        
+        // stop input & chord
         in.close();
         chord.leave();
     }

@@ -49,7 +49,7 @@ public class Enemy {
     public void gotAttackedAt(ID id, boolean hit) {
         if (hit && !attackedIntervals[calculateInterval(id)])
             hits++;
-        
+
         attackedIntervals[calculateInterval(id)] = true;
         this.checkAndSetDefeated();
     }
@@ -72,44 +72,45 @@ public class Enemy {
 
             if (id.isInInterval(ID.valueOf(lowerIntervalBorder), ID
                     .valueOf(upperIntervalBorder))) {
-                System.out.println("[enemy] attacked interval: " + i);
                 return i;
             }
             lowerIntervalBorder = upperIntervalBorder;
         }
 
         System.err
-                .println("[enemy] Interval not found, that should not happen");
+                .println("[enemy/calculateInterval] Interval not found, that should not happen");
 
         return -1;
     }
 
     private void calcIntervalSize() {
-        System.out.println("[enemy/calcIntervalSize] id length="
-                + enemyID.getLength());
+        // some debug output
+        // System.out.println("[enemy/calcIntervalSize] id length="
+        // + enemyID.getLength());
 
         BigInteger enemyIDBigInt = enemyID.toBigInteger();
         BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
-        System.out.println("[enemy/calcIntervalSize] PredecessorID="
-                + predecessorID);
+        // System.out.println("[enemy/calcIntervalSize] PredecessorID="
+        // + predecessorID);
         BigInteger range = enemyIDBigInt
                 .subtract(predecessorIDBigInt);
 
-        System.out.println("[enemy/calcIntervalSize] range=" + range);
+        // System.out.println("[enemy/calcIntervalSize] range=" + range);
         range = range.add(maxVal).mod(maxVal);
-        System.out.println("[enemy/calcIntervalSize] rangeWithPower="
-                + range);
+        // System.out.println("[enemy/calcIntervalSize] rangeWithPower="
+        // + range);
 
         intervalSize = range.divide(BigInteger.valueOf(nIntervals));
 
-        System.out.println("[enemy/calcIntervalSize] IntervalSize="
-                + intervalSize + " of Enemy " + enemyID);
+        // System.out.println("[enemy/calcIntervalSize] IntervalSize="
+        // + intervalSize + " of Enemy " + enemyID);
     }
 
     /**
      * Get ID in given intervall i
      * 
-     * @param i interval
+     * @param i
+     *            interval
      * @return ID in interval i
      */
     public ID getIdInInterval(int i) {
@@ -117,7 +118,8 @@ public class Enemy {
         BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
         BigInteger iBigInt = BigInteger.valueOf(i);
 
-        BigInteger intervalBigInt = (intervalSize.multiply(iBigInt)).add(BigInteger.ONE);
+        BigInteger intervalBigInt = (intervalSize.multiply(iBigInt))
+                .add(BigInteger.ONE);
 
         return ID.valueOf(predecessorIDBigInt.add(intervalBigInt)
                 .add(maxVal).mod(maxVal));
@@ -129,6 +131,12 @@ public class Enemy {
         return this.enemyID.equals(e.getId());
     }
 
+    /**
+     * Checks if player is in the range between this enemy and it's predecessor.
+     * 
+     * @param player
+     * @return
+     */
     public boolean inRange(ID player) {
         return player.isInInterval(predecessorID, enemyID);
     }
@@ -208,6 +216,11 @@ public class Enemy {
         return isDefeated;
     }
 
+    /**
+     * Checks whether or not the enemy is defeated
+     * 
+     * @return isDefeated
+     */
     public boolean checkDefeated() {
         if (nShips > this.hits) {
             return false;
@@ -215,10 +228,20 @@ public class Enemy {
         return true;
     }
 
+    /**
+     * Sets this enemy as defeated
+     * 
+     * @param isDefeated
+     */
     public void setDefeated(boolean isDefeated) {
         this.isDefeated = isDefeated;
     }
 
+    /**
+     * See {@link checkDefeated()} and {@link setDefeated(boolean isDefeated)}
+     * 
+     * @return defeated
+     */
     public boolean checkAndSetDefeated() {
         boolean defeated = checkDefeated();
         setDefeated(defeated);

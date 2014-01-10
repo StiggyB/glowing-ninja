@@ -15,6 +15,9 @@ import sun.audio.AudioStream;
 import de.uniba.wiai.lspi.chord.com.Node;
 import de.uniba.wiai.lspi.chord.data.ID;
 
+/**
+ * Battleship class, the main game and strategy class.
+ */
 public class Battleship {
 
     private int               nIntervals;
@@ -38,15 +41,14 @@ public class Battleship {
     private static Battleship game          = new Battleship();
 
     // --CONSTRUCTORS--//
-    /**
-     * Battleship, the main game and strategy class.
-     * 
-     * @param i
-     * @param s
-     */
     private Battleship() {
     }
 
+    /**
+     * Get an instance of the Battleship class.
+     * 
+     * @return
+     */
     public static Battleship getInstance() {
         return game;
     }
@@ -85,8 +87,8 @@ public class Battleship {
     }
 
     /**
-     * Calculates the intervals in the DHT. TODO Wrap around might work. Look at
-     * .addPowerOfTwo
+     * Calculates the intervals in the DHT.
+     * 
      */
     private int checkInterval(ID id) {
         BigInteger upperIntervalBorder = null;
@@ -110,6 +112,9 @@ public class Battleship {
         return -1;
     }
 
+    /**
+     * Calculates the interval size in the range from our predecessor to us.
+     */
     private void calcIntervalSize() {
         BigInteger myIDBigInt = myID.toBigInteger();
         BigInteger predecessorIDBigInt = predecessorID.toBigInteger();
@@ -152,6 +157,9 @@ public class Battleship {
                 myID);
     }
 
+    /**
+     * Initial filing of enemies from the finger table.
+     */
     private void fileEnemys() {
         List<Node> fingerTable = Network.getInstance().getChord()
                 .getFingerTable();
@@ -222,13 +230,11 @@ public class Battleship {
         }
 
         attackedEnemy.gotAttackedAt(target, hit);
-        if (hit) {
-            System.out.println("[battleship/logAttack] "
-                    + attackedEnemy + " got hit");
-        }
+
         if (lastTarget != null && attackedEnemy.isDefeated()) {
-            System.out.println(attackedEnemy.getId() + " is defeated.");
-            if(lastTarget.equals(target)){
+            System.out.println(attackedEnemy.getId()
+                    + " is defeated.");
+            if (lastTarget.equals(target)) {
                 System.out.println(" and we finished him off!");
                 InputStream in;
                 try {
@@ -243,9 +249,20 @@ public class Battleship {
                 }
             }
             System.out.println("GAME OVER!");
+            System.out.println("STATISTICS: ");
+            for (Enemy e : enemies) {
+                System.out.println("Enemy: " + e.getId()
+                        + "\n Ships left: "
+                        + (nShips - e.getNumberOfHits())
+                        + "\n Attacked intervals: "
+                        + e.getAttackedIntervals());
+            }
         }
     }
 
+    /**
+     * Shooter class to start a Thread which shoots at a given target.
+     */
     class Shooter implements Runnable {
 
         ID target;
@@ -262,7 +279,7 @@ public class Battleship {
     }
 
     /**
-     * Attacks given enemy
+     * Attacks a given {@code enemy}.
      * 
      * @param enemy
      *            the enemys number
@@ -289,7 +306,7 @@ public class Battleship {
             throw new EnemyNotFoundException("No such enemy");
         } else {
             System.out
-                    .println("[battleship/attackEnemy] shooting at: "
+                    .println("[battleship/attackEnemy] We are shooting at: "
                             + target);
         }
 
@@ -299,8 +316,6 @@ public class Battleship {
         Thread t = new Thread(shooter);
         t.start();
     }
-
-    // --GETTER AND SETTER--//
 
     /**
      * Should return an ID in an Interval of the enemy
@@ -348,26 +363,47 @@ public class Battleship {
 
     }
 
+    // --GETTER AND SETTER--//
+
     /**
-     * @return the shipsLeft
+     * Returns the number of ships left.
+     * 
+     * @return shipsLeft
      */
     protected int getShipsLeft() {
         return shipsLeft;
     }
 
+    /**
+     * Checks wether or not we are alive.
+     * 
+     * @return
+     */
     public boolean isAlive() {
         return alive;
     }
 
-    public void hasTurn(boolean turn) {
+    /**
+     * Set true if it's our turn and vice versa.
+     * 
+     * @param turn
+     */
+    public void setTurn(boolean turn) {
         this.turn = turn;
     }
 
-    public boolean getTurn() {
+    /**
+     * Checks if its our turn.
+     * 
+     * @param turn
+     */
+    public boolean hasTurn() {
         return turn;
     }
 
     /**
+     * Returns a List of all of our enemys.
+     * 
      * @return the enemys
      */
     protected List<Enemy> getEnemys() {
@@ -375,16 +411,10 @@ public class Battleship {
     }
 
     // --MISC--//
-    /**
-     * TODO fancier
-     */
     public void showShips() {
         System.out.println(Arrays.toString(map));
     }
 
-    /**
-     * TODO USE FINGERTABLE FOR SHOOTING
-     */
     public void printFingerTable() {
         System.out.println(Network.getInstance().getChord()
                 .printFingerTable());

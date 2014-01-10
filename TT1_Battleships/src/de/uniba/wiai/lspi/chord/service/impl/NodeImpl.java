@@ -439,7 +439,8 @@ public final class NodeImpl extends Node {
         return this.asyncExecutor;
     }
 
-    // TODO: implement this function in TTP
+    // ADDED FOR TT1 -->
+
     @Override
     public final void broadcast(Broadcast info)
             throws CommunicationException {
@@ -449,11 +450,6 @@ public final class NodeImpl extends Node {
 
         List<Node> fingerTable = this.impl.getFingerTable();
         List<Node> fingerTable_inRange = new ArrayList<Node>();
-
-        if (impl.getTransactionID() >= info.getTransaction()) {
-            System.err.println("--broadcast called. tid="
-                    + info.getTransaction());
-        }
 
         for (Node n : fingerTable) {
             if (!this.getNodeID().equals(info.getRange())
@@ -485,5 +481,7 @@ public final class NodeImpl extends Node {
                     .getTarget(), info.getHit());
         }
     }
+
+    // <-- ADDED FOR TT1
 
 }

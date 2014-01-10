@@ -1138,8 +1138,8 @@ public final class ChordImpl implements Chord, Report, AsynChord {
                 key, entry);
     }
 
-    // TODO: implement this function in TTP
-    // send broadcast to all nodes in finger table
+    // ADDED FOR TT1 -->
+    // vvvvvvvvvvvvvvvvv
 
     private int transactionID = 0;
 
@@ -1175,12 +1175,14 @@ public final class ChordImpl implements Chord, Report, AsynChord {
                         new Broadcast(range, this.localID, target,
                                 ++transactionID, hit));
             } catch (CommunicationException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
         }
     }
+
+    // ^^^^^^^^^^^^^^^^^^
+    // <-- ADDED FOR TT1
 
     public void setCallback(NotifyCallback callback) {
         if (callback == null) {

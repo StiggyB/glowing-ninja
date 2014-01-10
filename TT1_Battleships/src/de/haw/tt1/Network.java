@@ -11,7 +11,7 @@ import de.uniba.wiai.lspi.chord.service.ServiceException;
 import de.uniba.wiai.lspi.chord.service.impl.ChordImpl;
 
 /**
- * Sets up the chord-network
+ * Network class, sets up the chord-network.
  * 
  * @author Benjamin Burchard
  * 
@@ -36,7 +36,6 @@ public class Network {
             localHost = // "localhost";
             InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         this.localPort = localPort;
@@ -59,11 +58,21 @@ public class Network {
         this.chord.setCallback(nc);
     }
 
+    /**
+     * Return the instance of this network
+     * 
+     * @return this
+     */
     public static Network getInstance() {
         return instance;
     }
 
-    ID getRandomID() {
+    /**
+     * Generate random ID
+     * 
+     * @return ID random
+     */
+    public ID getRandomID() {
         // divide by 8 to get bytes, getLength measures in bits
         // and length of IDs has to be the same
         byte[] r = new byte[chordID.getLength() / 8];
@@ -73,12 +82,20 @@ public class Network {
         return (new ID(r));
     }
 
+    /**
+     * Set the chord URL port.
+     * 
+     * @param localPort
+     */
     public void setURLPort(int localPort) {
         this.nodeURL = getChordURL(this.localHost,
                 this.localPort = localPort);
         this.chord.setURL(nodeURL);
     }
 
+    /**
+     * Create a chord network.
+     */
     public void create() {
         try {
             chord.create(nodeURL);
@@ -89,6 +106,14 @@ public class Network {
         }
     }
 
+    /**
+     * Join a chord network.
+     * 
+     * @param host
+     *            to join
+     * @param port
+     *            at the host to join
+     */
     public void join(String host, int port) {
         URL bootstrapURL = getChordURL(host, port);
         try {
@@ -101,26 +126,32 @@ public class Network {
         }
     }
 
+    /**
+     * Leave the chord network
+     */
     public void leave() {
         chord.leave();
         System.out.println("Left chord network");
     }
 
     /**
-     * Shoot somewhere...
+     * Shoot at id
      * 
      * @param id
+     *            to shoot at
      */
     public void shoot(ID id) {
         chord.retrieve(id);
     }
 
     /**
-     * Build chord url with host and port
+     * Build chord URL with host and port.
      * 
      * @param host
+     *            host name
      * @param port
-     * @return url
+     *            port number
+     * @return url the chord URL
      */
     private URL getChordURL(String host, int port) {
         protocol = URL.KNOWN_PROTOCOLS.get(URL.SOCKET_PROTOCOL);
@@ -133,14 +164,29 @@ public class Network {
         return url;
     }
 
+    /**
+     * Returns the chord implementation.
+     * 
+     * @return chord
+     */
     public ChordImpl getChord() {
         return chord;
     }
 
+    /**
+     * Returns the chord ID
+     * 
+     * @return chordID
+     */
     public ID getChordID() {
         return chordID;
     }
 
+    /**
+     * Returns the predecessor ID
+     * 
+     * @return predecessor ID
+     */
     public ID getPredecessorID() {
         return chord.getPredecessorID();
     }
